@@ -155,13 +155,15 @@ static void ChiperNextBlock_CTR(ChiperData *data)
 	ChiperECB(data->block, data->key, data->sbox);
 	data->block_bytepos = 0;
 
-	/* Increment 256-bit counter (little-endian) */
-	size_t i;
-	for (i = 0; i < CHIPER_QWORDS; i++)
-	{
-		data->counter[i]++;
-		if (data->counter[i] != 0) break; /* no carry */
-	}
+	/* Increment counter as little-endian byte array 
+	 * It works on big-endian machine too */
+    uint8_t *c = (uint8_t *)data->counter;
+    size_t i;
+    for (i = 0; i < CHIPER_BYTES; i++)
+    {
+        c[i]++;
+        if (c[i] != 0) break; // break if no carry
+    }
 }
 
 /* Dispatch the mode */
