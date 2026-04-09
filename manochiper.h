@@ -127,6 +127,6 @@ void ChiperStreamEncode(ChiperData *data, void *buffer, size_t len);
  *
  *   psw:     input/output, null-terminated string, the length remains the same
  */
-void ChiperPasswordScramble(char *psw, size_t len);
+int ChiperPasswordScramble(char *psw, size_t len);
 
 #endif /* MANOCHIPER_H */
