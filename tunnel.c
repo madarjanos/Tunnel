@@ -72,6 +72,7 @@ typedef struct {
 
 // Secret (scrambled) password used encoder/decoder threads for chipers
 static char psw[256];
+static size_t pswlen;
 
 //----- Main functions -----
 
@@ -98,7 +99,7 @@ static THREAD_RET relay_thread(void *arg)
 		uint8_t salt[CHIPER_SALT_BYTES];
 		if (ChiperGenerateSalt(salt) < 0) goto _finish;
 		// initialize the chiper (salt + password) in CTR mode
-		if (ChiperInit(chiper, psw, 256, salt, CHIPER_MODE_CTR) < 0) goto _finish;
+		if (ChiperInit(chiper, psw, pswlen, salt, CHIPER_MODE_CTR) < 0) goto _finish;
 		// send salt to other tunnel
 		if (tcp_send_all(r->dst, salt, CHIPER_SALT_BYTES) != 0) goto _finish;
 	}
@@ -113,7 +114,7 @@ static THREAD_RET relay_thread(void *arg)
 		uint8_t salt[CHIPER_SALT_BYTES];
 		if (tcp_recv_all(r->src, salt, CHIPER_SALT_BYTES) != 0) goto _finish;
 		// initialize the chiper (salt + password) in CTR mode
-		if (ChiperInit(chiper, psw, 256, salt, CHIPER_MODE_CTR) < 0) goto _finish;
+		if (ChiperInit(chiper, psw, pswlen, salt, CHIPER_MODE_CTR) < 0) goto _finish;
 	}
 	
 	#ifndef NO_PRINT_INFO
@@ -230,7 +231,6 @@ int main(int argc, char *argv[])
 	int role = atoi(argv[4]);
 
 	// Password
-	memset(psw, 0, 256); // must be fill with 0 becasue the whole is used!
 	if (argc >= 1+5) // if input argument
 	{
 		strncpy(psw, argv[5], 255);
@@ -243,8 +243,10 @@ int main(int argc, char *argv[])
 	{
 		strcpy(psw, "KlO_:,/ThjR+!dJk<@&eTU =md+?.H[fd");
 	}
-	// Scramble the password (null-terminated string)
-	ChiperPasswordScramble(psw);
+	// Scramble the password and set pswlen to original string length
+	// Note that after scramble, the psw may contain 0 bytes (null charecters)!
+	pswlen = strlen(psw);
+	if (ChiperPasswordScramble(psw, pswlen) != 0) return 1;
 
 	// If no TCP working, exit
 	if (tcpbasic_init() != 0) return 1;
