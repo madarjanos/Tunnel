@@ -365,26 +365,20 @@ int ChiperInit(ChiperData *data, const char *psw, const int len,
  */
 void ChiperReset(ChiperData *data)
 {
-	/*
-	 * Use the first 256 bytes of the secret S-box as the initial block
-	 * This ties the IV to the secret S-box, not a public constant.
-	 */
+	/* Use the first 256 bytes of the secret S-box as the initial block
+	 * This link the IV to the secret S-box, not a public constant. */
 	memcpy(data->block, data->sbox, CHIPER_BYTES);
 	ChiperECB(data->block, data->key, data->sbox);
 	data->block_bytepos = 0;
 
-	/*
-	 * CTR mode: reset counter.
-	 * The counter was initialized from the salt in ChiperInit;
-	 * we store it in data->counter[0] after encoding with key+sbox
-	 * so that the starting point is secret.
-	 * Here we reload the initial counter value from the block we just made.
-	 */
+	/* Additional in CTR mode: reset counter and make new starting block */
 	if (data->mode == CHIPER_MODE_CTR)
 	{
+		/* The block is now the ECB(sbox[first bytes]) -> copy into counter */
 		memcpy(data->counter, data->block, CHIPER_BYTES);
-		/* Generate the first real CTR block */
+		/* Generate the real CTR block from that starting counter */
 		ChiperNextBlock_CTR(data);
+		/* the counter will be increased from that value */
 	}
 }
 
@@ -452,7 +446,7 @@ void ChiperPasswordScramble(char *psw)
  * OSRandomBytes: fill buf with len cryptographically random bytes.
  * Uses the best available OS source on each platform.
  * Returns 0 on success, -1 on failure.
- * NEVER falls back to weak sources — fails loudly instead.
+ * NEVER falls back to weak sources - rather warning during compile!
  */
 int ChiperGenerateSalt(uint8_t *salt)
 {
