@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 
-// -- init / cleanup ---------------------------------------------------------
+// ---- init / cleanup ----
 
 int tcpbasic_init(void)
 {
@@ -32,7 +32,7 @@ void tcpbasic_cleanup(void)
 #endif
 }
 
-// -- internal helper: resolve host + port string -> addrinfo list -----------
+// ---- resolve host + port string to addrinfo ----
 
 static struct addrinfo *resolve(const char *host, const char *port)
 {
@@ -50,7 +50,7 @@ static struct addrinfo *resolve(const char *host, const char *port)
 	return res;
 }
 
-// -- tcp_listen -------------------------------------------------------------
+// ---- tcp_listen ----
 
 sock_t tcp_listen(int port, int backlog)
 {
@@ -67,7 +67,7 @@ sock_t tcp_listen(int port, int backlog)
 		return SOCK_INVALID;
 	}
 
-	// SO_REUSEADDR: allow immediate restart without "address in use"
+	// SO_REUSEADDR: allow immediate restart when new bind() withouth waiting
 	setsockopt(ls, SOL_SOCKET, SO_REUSEADDR, (const char *)&opt, sizeof opt);
 
 	memset(&addr, 0, sizeof addr);
@@ -96,7 +96,7 @@ sock_t tcp_listen(int port, int backlog)
 	return ls;
 }
 
-// -- tcp_accept -------------------------------------------------------------
+// ---- tcp_accept ----
 
 sock_t tcp_accept(sock_t              listen_sock,
 				  struct sockaddr_in *peer_addr,
@@ -119,7 +119,7 @@ sock_t tcp_accept(sock_t              listen_sock,
 	return conn;
 }
 
-// -- tcp_connect ------------------------------------------------------------
+// ---- tcp_connect ----
 
 sock_t tcp_connect(const char *host, const char *port)
 {
@@ -148,7 +148,7 @@ sock_t tcp_connect(const char *host, const char *port)
 	return s;
 }
 
-// -- tcp_send_all -----------------------------------------------------------
+// ---- tcp_send_all ----
 
 int tcp_send_all(sock_t s, const void *buf, int len)
 {
@@ -169,7 +169,7 @@ int tcp_send_all(sock_t s, const void *buf, int len)
 	return 0;
 }
 
-// -- tcp_recv_all -----------------------------------------------------------
+// ---- tcp_recv_all ----
 
 int tcp_recv_all(sock_t s, void *buf, int len)
 {
@@ -191,7 +191,7 @@ int tcp_recv_all(sock_t s, void *buf, int len)
 	return 0;
 }
 
-// -- tcp_recv_any -----------------------------------------------------------
+// ---- tcp_recv_any ----
 
 int tcp_recv_any(sock_t s, void *buf, int len)
 {
@@ -203,12 +203,12 @@ int tcp_recv_any(sock_t s, void *buf, int len)
 	return r; // 0 = peer closed cleanly, -1 = error, >0 = bytes received
 }
 
-// -- tcp_shutdown_and_close ------------------------------------------------
+// ---- tcp_shutdown_and_close ----
  
 void tcp_shutdown_and_close(sock_t s)
 {
-	// shutdown() aborts any recv() or send() blocked on this socket in
-	// another thread. On Linux, close() alone does not guarantee this.
+	/* shutdown() aborts any recv() or send() blocked on this socket in
+	 * another thread. On Linux, close() alone does not guarantee this.*/
 #ifdef _WIN32
 	shutdown(s, SD_BOTH);
 #else
