@@ -424,19 +424,27 @@ void ChiperStreamEncode(ChiperData *data, void *buffer, size_t len)
 
 /*
  * ChiperPasswordScramble
- *   Scramble (deterministically) password string
+ *   Scramble (deterministically) a password string
+ *   The goal is make password not immediately recognizable as
+ *   a human-readable string in a memory dump.
+ *   The output may contain 0 bytes (null chars)!
  */
-void ChiperPasswordScramble(char *psw)
+int ChiperPasswordScramble(char *psw, size_t len)
 {
-	const size_t len = strlen(psw);
-	ChiperCore(psw, len, base_sbox);
-	char * psw_copy = malloc(len);
-	if (psw_copy == NULL) return;
-	memcpy(psw_copy, psw, len);
-	ChiperCore(psw, len, base_sbox);
-	XorAddLooped(psw, len, psw_copy, len);
-	SecureWipe(psw_copy, len);
-	free(psw_copy);
+{
+    ChiperCore((uint8_t*)psw, len, base_sbox);
+    char *psw_copy = malloc(len);
+    if (psw_copy == NULL)
+    {
+        SecureWipe(psw, len); // wipe rather than leave original exposed
+        return -1;
+    }
+    memcpy(psw_copy, psw, len);
+    ChiperCore((uint8_t*)psw, len, base_sbox);
+    XorAddLooped(psw, len, psw_copy, len);
+    SecureWipe(psw_copy, len);
+    free(psw_copy);
+    return 0;
 }
 
 
