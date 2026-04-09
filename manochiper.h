@@ -118,10 +118,15 @@ void ChiperStreamEncode(ChiperData *data, void *buffer, size_t len);
 
 /*
  * ChiperPasswordScramble
- *   Scramble (deterministically) a string using default core alogrithm
- *   Recommended - but not required - using ASAP the password string is readed
+ *   Scramble (deterministically) a string using default core alogrithm.
+ *   Recommended - but not required - using ASAP the password string is readed.
+ *   The goal is make password not immediately recognizable as a human-readable 
+ *   string in a memory dump. The scrabmble is one-way, so after scrambling
+ *   the original password string can be recovered with brute-force only.
+ *   The output may contain 0 bytes (null chars), so strlen will be wrong after it!
+ *
  *   psw:     input/output, null-terminated string, the length remains the same
  */
-void ChiperPasswordScramble(char *psw);
+void ChiperPasswordScramble(char *psw, size_t len);
 
 #endif /* MANOCHIPER_H */
