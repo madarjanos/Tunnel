@@ -179,7 +179,7 @@ static inline void ChiperNextBlock(ChiperData *data)
 //----- S-box generation -----
 
 /*
- * Relink a permutation into a single 256-element cycle.
+ * Rearrange sbox (permutation) into a single 256-element cycle.
  * This guarantees no short cycles: sbox[sbox[...[x]...]] = x
  * only after exactly 256 applications.
  * Works on the first 256 bytes only (call before doubling).
@@ -314,9 +314,9 @@ static int DeriveKey(uint64_t *key, const char *psw, const int len,
  *
  * Sequence:
  *   1. Derive key from password+salt (memory-hard KDF)
- *   2. Prime the keystream with the derived key and base_sbox
- *   3. Generate secret S-box from that keystream (Fisher-Yates)
- *   4. Reset the stream again so encryption starts fresh
+ *   2. Initialize temporaly the chiper (and the keystream)
+ *   3. Generate secret S-box from that keystream (pseudo-random shuffle)
+ *   4. Reset the keystream with this S-box, so encryption starts fresh
  */
 int ChiperInit(ChiperData *data, const char *psw, const int len,
 			   const uint8_t *salt, ChiperMode mode)
@@ -330,10 +330,10 @@ int ChiperInit(ChiperData *data, const char *psw, const int len,
 		return -1;
 
 	/*
-	 * Step 2: prime keystream using base_sbox temporarily.
+	 * Step 2: initialize temporaly the chiper (and the keystream)
 	 * We need a working keystream to drive the S-box shuffle,
 	 * but the secret S-box isn't ready yet.
-	 * Use base_sbox as a stand-in — it is replaced in step 3.
+	 * Use base_sbox as initial S-Box - and replace it in Step 3
 	 */
 	memcpy(data->sbox, base_sbox, 512);
 
@@ -352,7 +352,7 @@ int ChiperInit(ChiperData *data, const char *psw, const int len,
 	/* Step 3: generate secret S-box from keystream */
 	GenerateSbox(data->sbox, data);
 
-	/* Step 4: reset stream — uses the now-secret S-box from here on */
+	/* Step 4: reset stream — uses the secret S-box from here on */
 	ChiperReset(data);
 
 	return 0;
