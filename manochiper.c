@@ -157,13 +157,13 @@ static void ChiperNextBlock_CTR(ChiperData *data)
 
 	/* Increment counter as little-endian byte array 
 	 * It works on big-endian machine too */
-    uint8_t *c = (uint8_t *)data->counter;
-    size_t i;
-    for (i = 0; i < CHIPER_BYTES; i++)
-    {
-        c[i]++;
-        if (c[i] != 0) break; // break if no carry
-    }
+	uint8_t *c = (uint8_t *)data->counter;
+	size_t i;
+	for (i = 0; i < CHIPER_BYTES; i++)
+	{
+		c[i]++;
+		if (c[i] != 0) break; // break if no carry
+	}
 }
 
 /* Dispatch the mode */
@@ -431,20 +431,19 @@ void ChiperStreamEncode(ChiperData *data, void *buffer, size_t len)
  */
 int ChiperPasswordScramble(char *psw, size_t len)
 {
-{
-    ChiperCore((uint8_t*)psw, len, base_sbox);
-    char *psw_copy = malloc(len);
-    if (psw_copy == NULL)
-    {
-        SecureWipe(psw, len); // wipe rather than leave original exposed
-        return -1;
-    }
-    memcpy(psw_copy, psw, len);
-    ChiperCore((uint8_t*)psw, len, base_sbox);
-    XorAddLooped(psw, len, psw_copy, len);
-    SecureWipe(psw_copy, len);
-    free(psw_copy);
-    return 0;
+	ChiperCore((uint8_t*)psw, len, base_sbox);
+	char *psw_copy = malloc(len);
+	if (psw_copy == NULL)
+	{
+		SecureWipe(psw, len); // wipe rather than leave original exposed
+		return -1;
+	}
+	memcpy(psw_copy, psw, len);
+	ChiperCore((uint8_t*)psw, len, base_sbox);
+	XorAddLooped(psw, len, psw_copy, len);
+	SecureWipe(psw_copy, len);
+	free(psw_copy);
+	return 0;
 }
 
 
