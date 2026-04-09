@@ -81,8 +81,8 @@ int ChiperGenerateSalt(uint8_t *salt);
 /*
  * ChiperInit
  *   Derive secret key and S-box from password + salt, then reset stream.
- *   Both sender and receiver call this with the same password and salt
- *   to arrive at identical cipher state.
+ *   Both sender and receiver must call this with the same password and salt
+ *   to get identical cipher state!
  *
  *   data:       output, initialized cipher data structure
  *   psw:        input, password string (may be NULL or empty, but insecure)
@@ -99,7 +99,7 @@ int ChiperInit(ChiperData *data, const char *psw, const int len,
  *   Reset the keystream to the beginning (same key and S-box, fresh stream).
  *   Call before starting a new message with the same key.
  *   Note: Reusing key+salt without changing either is dangerous in OFB mode.
- *         In CTR mode the counter is reset to zero.
+ *         In CTR mode the counter is reset to zero (a key+salt derived initial value)
  *
  *   data: input/output, cipher data structure (must be initialized)
  */
@@ -119,8 +119,8 @@ void ChiperStreamEncode(ChiperData *data, void *buffer, size_t len);
 /*
  * ChiperPasswordScramble
  *   Scramble (deterministically) a string using default core alogrithm
- *   Recommended using ASAP on the password string before Init
- *   psw:     input/output, null-terminated string
+ *   Recommended - but not required - using ASAP the password string is readed
+ *   psw:     input/output, null-terminated string, the length remains the same
  */
 void ChiperPasswordScramble(char *psw);
 
